@@ -11,6 +11,11 @@ export default class Searchbar extends Component {
     });
   };
 
+  handleSubmit = e => {
+    e.preventDefault();
+    this.props.onSubmit(this.state.query);
+  };
+
   render() {
     return (
       <header className={css.Searchbar}>
@@ -18,9 +23,7 @@ export default class Searchbar extends Component {
           <button
             className={css['SearchForm-button']}
             type="submit"
-            onClick={e => {
-              this.props.onSubmit(e, this.state.query);
-            }}
+            onClick={this.handleSubmit}
           >
             <span className={css['SearchForm-button-label']}>Search</span>
           </button>

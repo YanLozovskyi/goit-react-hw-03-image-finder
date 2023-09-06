@@ -5,7 +5,7 @@ import { RotatingLines } from 'react-loader-spinner';
 import css from './App.module.css';
 
 import Searchbar from './Searchbar/Searchbar';
-import FetchImages from 'FetchImages/FetchImages';
+import fetchImages from 'FetchImages/FetchImages';
 import ImageGallery from './ImageGallery/ImageGallery';
 import Button from './Button/Button';
 import Modal from './Modal/Modal';
@@ -24,16 +24,27 @@ export default class App extends Component {
     modalTags: '',
   };
 
-  componentDidUpdate(_, prevState) {
+  async componentDidUpdate(_, prevState) {
     const { query, page } = this.state;
 
     if (page !== prevState.page || query !== prevState.query) {
-      FetchImages({ state: this.state, setState: this.setState.bind(this) });
+      try {
+        const data = await fetchImages({ query, page });
+        this.setState(prevState => ({
+          results: [...prevState.results, ...data.hits],
+          loading: false,
+          data,
+        }));
+        if (data.totalHits > 0) {
+          toast.info(`Found ${data.totalHits} images`);
+        }
+      } catch (error) {
+        console.error(error);
+      }
     }
   }
 
-  handleFormSubmit = (e, query) => {
-    e.preventDefault();
+  handleFormSubmit = query => {
     if (query.trim() === '') {
       return toast.error('Enter your request');
     }
@@ -44,7 +55,7 @@ export default class App extends Component {
       );
     }
 
-    this.setState({ query, loading: true, results: [] });
+    this.setState({ query, loading: true, results: [], page: 1 });
   };
 
   onLoadMoreClick = () => {
@@ -71,6 +82,7 @@ export default class App extends Component {
   render() {
     const {
       loading,
+      query,
       data,
       results,
       page,
@@ -81,6 +93,8 @@ export default class App extends Component {
     } = this.state;
 
     const totalPage = data.totalHits / perPage;
+    const isGalleryEmpty = results.length === 0;
+
     return (
       <>
         <ToastContainer position="top-right" autoClose={3000} theme="dark" />
@@ -94,6 +108,17 @@ export default class App extends Component {
               width="96"
               visible={true}
             />
+          </div>
+        )}
+        {isGalleryEmpty && query && (
+          <div className={css.text}>
+            We apologize, but we couldn't find any images for your search.
+            Please try entering different keywords.
+          </div>
+        )}
+        {isGalleryEmpty && query === '' && (
+          <div className={css.text}>
+            Please enter a search query to start exploring images.
           </div>
         )}
         {results.length > 0 && (
