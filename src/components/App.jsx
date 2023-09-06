@@ -35,7 +35,7 @@ export default class App extends Component {
           loading: false,
           data,
         }));
-        if (data.totalHits > 0) {
+        if (data.totalHits > 0 && this.state.page === 1) {
           toast.info(`Found ${data.totalHits} images`);
         }
       } catch (error) {
